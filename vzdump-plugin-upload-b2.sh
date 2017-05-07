@@ -68,12 +68,15 @@ if [ "$1" == "backup-end" ]; then
     exit 6
   fi
 
-  echo "Deleting whole file"
-  rm "$TARFILE"
+# Do not delete local files
+#  echo "Deleting whole file"
+#  rm "$TARFILE"
+# Tarfile name
+echo $TARFILE
 
   echo "ENCRYPTING"
   cd "$SECONDARY"
-  ls -1 $TARBASENAME.split.* | time xargs --verbose -I % -n 1 -P $NUM_PARALLEL_GPG $GPG_BINARY --no-tty --compress-level 0 --passphrase-file $GPG_PASSPHRASE_FILE -c --output "$DUMPDIR/%.gpg" "%"
+  ls -1 $TARBASENAME.split.* | time xargs -I % -n 1 -P $NUM_PARALLEL_GPG $GPG_BINARY --no-tty --compress-level 0 --passphrase-file $GPG_PASSPHRASE_FILE -c --output "$DUMPDIR/%.gpg" "%"
   if [ $? -ne 0 ] ; then
     echo "Something went wrong encrypting."
     exit 7
@@ -98,7 +101,7 @@ if [ "$1" == "backup-end" ]; then
   fi
 
   echo "UPLOADING to B2 with up to $NUM_PARALLEL_UPLOADS parallel uploads."
-  ls -1 $TARFILE.sha1sums $TARFILE.split.* | xargs --verbose -I % -n 1 -P $NUM_PARALLEL_UPLOADS $B2_BINARY upload_file $B2_BUCKET "%" "$B2_PATH%"
+  ls -1 $TARFILE.sha1sums $TARFILE.split.* | xargs -I % -n 1 -P $NUM_PARALLEL_UPLOADS $B2_BINARY upload_file $B2_BUCKET "%" "$B2_PATH%"
   if [ $? -ne 0 ] ; then
     echo "Something went wrong uploading."
     exit 10
